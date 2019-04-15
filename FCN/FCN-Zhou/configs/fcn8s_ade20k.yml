@@ -1,0 +1,27 @@
+model:
+    arch: fcn8s
+data:
+    dataset: ade20k
+    train_split: training
+    val_split: validation
+    img_rows: 384
+    img_cols: 384
+    path: /home/zw1923/FCN/ADEChallengeData2016/
+
+training:
+    train_iters: 300000
+    batch_size: 8
+    val_interval: 2500
+    n_workers: 20
+    print_interval: 500
+    optimizer:
+        name: 'sgd'
+        lr: 1.0e-12
+        weight_decay: 0.0005
+        momentum: 0.99
+    loss:
+        name: 'cross_entropy'
+        size_average: False
+    lr_schedule:
+        name: 'constant_lr'
+    resume: /home/zw1923/FCN/pretrained/fcn8s_ade20k_best_model.pkl
