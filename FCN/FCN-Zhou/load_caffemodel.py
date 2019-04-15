@@ -1,3 +1,5 @@
+# The function was found in https://stackoverflow.com/questions/45199643/how-do-i-load-a-caffe-model-and-convert-to-a-numpy-array
+
 from caffenet import *
 import caffe
 import numpy as np
