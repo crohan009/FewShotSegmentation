@@ -214,7 +214,7 @@ if __name__ == "__main__":
         "--config",
         nargs="?",
         type=str,
-        default="configs/fcn8s_pascal.yml",
+        default="configs/fcn8s_ade20k_zhou.yml",
         help="Configuration file to use",
     )
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
         "--model_path",
         nargs="?",
         type=str,
-        default="fcn8s_pascal_1_26.pkl",
+        default="fcn8s_ade20k_zhou.pkl",
         help="Path to the saved model",
     )
 

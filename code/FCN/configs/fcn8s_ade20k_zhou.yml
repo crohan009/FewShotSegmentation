@@ -1,7 +1,7 @@
 model:
     arch: fcn8s
 data:
-    dataset: ade20k
+    dataset: ade20k_zhou
     train_split: training
     val_split: validation
     img_rows: 384
@@ -24,4 +24,4 @@ training:
         size_average: False
     lr_schedule:
         name: 'constant_lr'
-    resume: /home/zw1923/FCN/pretrained/fcn8s_ade20k_best_model.pkl
+    resume: /home/zw1923/FCN/pretrained/fcn8s_ade20k_zhou_best_model.pkl

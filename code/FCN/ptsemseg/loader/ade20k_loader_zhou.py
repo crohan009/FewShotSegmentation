@@ -11,7 +11,7 @@ import os
 import random
 
 
-class ADE20KLoader(data.Dataset):
+class ADE20KLoader_Zhou(data.Dataset):
     def __init__(
         self,
         root,
@@ -121,7 +121,7 @@ class ADE20KLoader(data.Dataset):
 
 if __name__ == "__main__":
     local_path = "/Users/meet/data/ADE20K_2016_07_26/"
-    dst = ADE20KLoader(local_path, is_transform=True)
+    dst = ADE20KLoader_Zhou(local_path, is_transform=True)
     trainloader = data.DataLoader(dst, batch_size=4)
     for i, data_samples in enumerate(trainloader):
         imgs, labels = data_samples

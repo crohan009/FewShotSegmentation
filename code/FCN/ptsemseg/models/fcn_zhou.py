@@ -35,9 +35,9 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
     return loss
 
 
-class fcn8s(nn.Module):
+class fcn8s_zhou(nn.Module):
     def __init__(self, n_classes=21, learned_billinear=True):
-        super(fcn8s, self).__init__()
+        super(fcn8s_zhou, self).__init__()
         self.learned_billinear = learned_billinear
         self.n_classes = n_classes
         self.loss = functools.partial(cross_entropy2d, size_average=False)
@@ -214,7 +214,7 @@ class fcn8s(nn.Module):
 
 pretrained = np.array(np.load('FCN_weights.npy'))
 
-model = fcn8s(n_classes=151)
+model = fcn8s_zhou(n_classes=151)
 model.init_pretrained_params(pretrained)
 
 print("Model's state_dict:")
