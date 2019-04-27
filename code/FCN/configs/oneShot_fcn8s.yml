@@ -1,0 +1,28 @@
+model:
+    arch: fcn8s
+data:
+    dataset: ade20k_few_shot
+    img_rows: 512
+    img_cols: 512
+    train_path: /path/to/training_dataset_file/
+    val_data_path: /path/to/test_dataset_file/
+    num_train_img: 5
+    num_val_img: 1
+
+training:
+    num_presentations: 1000
+    batch_size: 1
+    test_interval: 50
+    n_workers: 16
+    print_interval: 2
+    optimizer:
+        name: 'sgd'
+        lr: 1.0e-10
+        weight_decay: 0.0005
+        momentum: 0.99
+    loss:
+        name: 'cross_entropy'
+        size_average: False
+    lr_schedule:
+    resume: fcn8s_ade20k_best_model.pkl
+
