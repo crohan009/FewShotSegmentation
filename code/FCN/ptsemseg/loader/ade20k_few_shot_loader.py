@@ -60,7 +60,7 @@ class ADE20KFewShotLoader(data.Dataset):
             idx = random.randint(0, len(self.presentations) - 1)
             self.presentation = self.presentations[idx]
             # get the common classes of the selected presentation
-            self.classes = int(self.pre_classes[idx])
+            self.classes = [int(c) for c in self.pre_classes[idx]]
 
         img_path = [image for image in self.images if self.presentation[index] in image]
         ann_path = [ann for ann in self.annotations if self.presentation[index] in ann]
