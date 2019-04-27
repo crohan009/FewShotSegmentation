@@ -40,8 +40,8 @@ def select_train(classes, train_img_pool, img_num):
                 return result
 
 
-def generate_pre(class_num, img_num, pre_size, classes_pool, test_img_pool, train_img_pool, write_file):
-    with open(write_file, 'w') as f_out:
+def generate_pre(class_num, img_num, pre_size, classes_pool, test_img_pool, train_img_pool, write_file, class_file):
+    with open(write_file, 'w') as f_out, open(class_file, 'w') as f_class_out:
         for i in range(pre_size):
             random.shuffle(classes_pool)
             classes = random.sample(classes_pool, class_num)
@@ -52,15 +52,17 @@ def generate_pre(class_num, img_num, pre_size, classes_pool, test_img_pool, trai
             if test and train:
                 print train
                 f_out.write(test + ',' + ",".join([x for x in train]) + '\n')
+                f_class_out.write(",".join([str(x) for x in classes]) + '\n')
 
 
 val_test_img = read_map('val_test_map.txt')
 val_train_img = read_map('val_train_map.txt')
 val_classes = read_classes('val_classes.txt')
 val_pre_file = 'val_presentations.txt'
-val_presentation_number = 200000000
+val_class_list = 'val_class_list.txt'
+val_presentation_number = 2000000
 class_num = 5
 img_per_pre = 5
 
-generate_pre(class_num, img_per_pre, val_presentation_number, val_classes, val_test_img, val_train_img, val_pre_file)
+generate_pre(class_num, img_per_pre, val_presentation_number, val_classes, val_test_img, val_train_img, val_pre_file, val_class_list)
 
