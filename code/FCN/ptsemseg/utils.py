@@ -22,6 +22,20 @@ def recursive_glob(rootdir=".", suffix=""):
     ]
 
 
+def read_file(rootdir=".", filename="", split=""):
+    """
+    Read the given file into a list with each element correspond to one line
+    :param rootdir: the root directory
+    :param filename: the file name
+    :param split: the line split
+    """
+    with open(os.path.join(rootdir, filename), 'r') as f:
+        return [
+            line.rstrip().split(split)
+            for idx, line in enumerate(f)
+        ]
+
+
 def alpha_blend(input_image, segmentation_mask, alpha=0.5):
     """Alpha Blending utility to overlay RGB masks on RBG images
         :param input_image is a np.ndarray with 3 channels
