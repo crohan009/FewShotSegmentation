@@ -37,24 +37,27 @@ def train(cfg, writer, logger):
     data_aug = get_composed_augmentations(augmentations)
 
     # Setup Dataloader
-    data_loader = get_loader(cfg["data"]["dataset"])
-    train_data_path = cfg["data"]["train_path"]
-    #val_data_path = cfg["data"]["val_path"]
+    data_loader = get_loader(cfg["data"]["dataloader_type"])
+
+    data_root = cfg["data"]["train_path"]
+    presentation_root = cfg["data"]["train_path"]
 
 
     t_loader = data_loader(
-        train_data_path,
+        data_root= data_root,
+        presentation_root= presentation_root,
         is_transform=True,
         img_size=(cfg["data"]["img_rows"], cfg["data"]["img_cols"]),
         augmentations=data_aug,
     )
 
     v_loader = data_loader(
-        val_data_path,
+        data_root= data_root,
+        presentation_root= presentation_root,
         is_transform=True,
         img_size=(cfg["data"]["img_rows"], cfg["data"]["img_cols"]),
-        img_size=(cfg["data"]["img_rows"], cfg["data"]["img_cols"]),
         augmentations=data_aug,
+        test_mode=False
     )
 
     n_classes = t_loader.n_classes
@@ -67,8 +70,10 @@ def train(cfg, writer, logger):
     )
 
     valloader = data.DataLoader(
-        v_loader, batch_size=cfg["training"]["batch_size"], 
-        num_workers=cfg["training"]["n_workers"]
+        v_loader, 
+        batch_size=cfg["training"]["batch_size"], 
+        num_workers=cfg["training"]["n_workers"],
+        shuffle=False
     )
 
     # Setup Metrics
@@ -125,10 +130,11 @@ def train(cfg, writer, logger):
         # TRAINING PHASE #
         #                #   
         train_pres_ctr = 0
-        for (images, labels) in trainloader:                    # get a single training presentation 
+        for (images, labels) in valloader:                    # get a single training presentation 
             i += 1
             train_pres_ctr += 1
             start_ts = time.time()
+            
             if(train_pres_ctr <= 5):
                 scheduler.step()
                 model.train()
