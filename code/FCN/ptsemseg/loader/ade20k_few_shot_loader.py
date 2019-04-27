@@ -12,16 +12,18 @@ from ptsemseg.utils import recursive_glob, read_file
 
 
 class ADE20KFewShotLoader(data.Dataset):
-    def __init__(
+        def __init__(
         self,
-        root,
+        data_root="",
+        presentation_root="",
         is_transform=False,
         img_size=512,
         augmentations=None,
         img_norm=True,
         test_mode=False,
     ):
-        self.root = root
+        self.data_root = data_root
+        self.presentation_root = presentation_root
         self.is_transform = is_transform
         self.augmentations = augmentations
         self.img_norm = img_norm
@@ -31,15 +33,15 @@ class ADE20KFewShotLoader(data.Dataset):
         self.mean = np.array([104.00699, 116.66877, 122.67892])
 
         if not self.test_mode:
-            image_list = recursive_glob(rootdir=self.root + "images/training/", suffix=".jpg")
-            annotation_list = recursive_glob(rootdir=self.root + "annotations/training/", suffix='.png')
-            presentation_list = read_file(rootdir=self.root + "presentations/training/", filename='presentations.txt', split=',')
-            classes_list = read_file(rootdir=self.root + "presentations/training/", filename="presentation_classes.txt", split=',')
+            image_list = recursive_glob(rootdir=self.data_root + "images/training/", suffix=".jpg")
+            annotation_list = recursive_glob(rootdir=self.data_root + "annotations/training/", suffix='.png')
+            presentation_list = read_file(rootdir=self.presentation_root, filename='train_presentations.txt', split=',')
+            classes_list = read_file(rootdir=self.presentation_root, filename="train_class_list.txt", split=',')
         else:
-            image_list = recursive_glob(rootdir=self.root + "images/validation/", suffix='.jpg')
-            annotation_list = recursive_glob(rootdir=self.root + "annotations/validation/", suffix='.png')
-            presentation_list = read_file(rootdir=self.root + "presentations/validation/", filename='presentations.txt', split=',')
-            classes_list = read_file(rootdir=self.root + "presentations/validation/", filename='presentation_classes.txt', split=',')
+            image_list = recursive_glob(rootdir=self.data_root + "images/validation/", suffix='.jpg')
+            annotation_list = recursive_glob(rootdir=self.data_root + "annotations/validation/", suffix='.png')
+            presentation_list = read_file(rootdir=self.presentation_root, filename='val_presentations.txt', split=',')
+            classes_list = read_file(rootdir=self.presentation_root, filename='val_class_list.txt', split=',')
 
         self.images = image_list
         self.annotations = annotation_list
