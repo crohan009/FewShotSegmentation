@@ -21,6 +21,7 @@ from ptsemseg.optimizers import get_optimizer
 
 from tensorboardX import SummaryWriter
 
+
 def train(cfg, writer, logger):
 
     # Setup seeds
@@ -39,9 +40,8 @@ def train(cfg, writer, logger):
     # Setup Dataloader
     data_loader = get_loader(cfg["data"]["dataloader_type"])
 
-    data_root = cfg["data"]["train_path"]
-    presentation_root = cfg["data"]["train_path"]
-
+    data_root = cfg["data"]["data_root"]
+    presentation_root = cfg["data"]["presentation_root"]
 
     t_loader = data_loader(
         data_root= data_root,
@@ -57,16 +57,16 @@ def train(cfg, writer, logger):
         is_transform=True,
         img_size=(cfg["data"]["img_rows"], cfg["data"]["img_cols"]),
         augmentations=data_aug,
-        test_mode=False
+        test_mode=True
     )
 
     n_classes = t_loader.n_classes
-
+  
     trainloader = data.DataLoader(
         t_loader,
         batch_size=cfg["training"]["batch_size"],
         num_workers=cfg["training"]["n_workers"],
-        shuffle=True,
+        shuffle=False,
     )
 
     valloader = data.DataLoader(
@@ -77,7 +77,7 @@ def train(cfg, writer, logger):
     )
 
     # Setup Metrics
-    #running_metrics_train = runningScore(n_classes)
+    # running_metrics_train = runningScore(n_classes)
     running_metrics_val = runningScore(n_classes)
 
     # Setup Model
@@ -94,7 +94,7 @@ def train(cfg, writer, logger):
 
     scheduler = get_scheduler(optimizer, cfg["training"]["lr_schedule"])
 
-    loss_fn = get_loss_function(cfg). 
+    loss_fn = get_loss_function(cfg) 
     logger.info("Using loss {}".format(loss_fn))
 
     start_iter = 0
@@ -116,141 +116,120 @@ def train(cfg, writer, logger):
         else:
             logger.info("No checkpoint found at '{}'".format(cfg["training"]["resume"]))
 
-    #train_loss_meter = averageMeter()
+    # train_loss_meter = averageMeter()
     val_loss_meter = averageMeter()
     time_meter = averageMeter()
 
     best_iou = -100.0
     i = start_iter
-    flag = True
 
-    while i <= cfg["training"]["num_presentations"] and flag:
+    while i <= cfg["training"]["num_presentations"]:
 
         #                #
         # TRAINING PHASE #
-        #                #   
-        train_pres_ctr = 0
-        for (images, labels) in valloader:                    # get a single training presentation 
-            i += 1
-            train_pres_ctr += 1
-            start_ts = time.time()
+        #                #
+        i += 1
+        start_ts = time.time()
+        trainloader.dataset.random_select()
+        for (images, labels) in trainloader:                    # get a single training presentation
+            scheduler.step()
+            model.train()
+
+            images = images.to(device)
+            labels = labels.to(device)
+
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = loss_fn(input=outputs, target=labels)
+            loss.backward()
+            optimizer.step()
+
+        time_meter.update(time.time() - start_ts)  # -> time taken per presentation
+
+        if (i + 1) % cfg["training"]["print_interval"] == 0:
+            fmt_str = "Pres [{:d}/{:d}]  Loss: {:.4f}  Time/Pres: {:.4f}"
+            print_str = fmt_str.format(
+                i + 1,
+                cfg["training"]["num_presentations"],
+                loss.item(),
+                time_meter.avg / cfg["training"]["batch_size"],
+            )
+            print(print_str)
+            logger.info(print_str)
+            writer.add_scalar("loss/test_loss", loss.item(), i + 1)
+            time_meter.reset()
+
+        #            #
+        # TEST PHASE #
+        #            #
+        if ((i + 1) % cfg["training"]["test_interval"] == 0 or
+                    (i + 1) == cfg["training"]["num_presentations"]):
             
-            if(train_pres_ctr <= 5):
-                scheduler.step()
-                model.train()
+            training_state_dict = model.state_dict()                            # saving the training state of the model
+            test_pres_ctr = 0
+            valloader.dataset.random_select()
+            for (images_val, labels_val) in valloader:  # get a single test presentation
+                test_pres_ctr += 1
 
-                images = images.to(device)
-                labels = labels.to(device)
+                images_val = images_val.to(device)
+                labels_val = labels_val.to(device)
 
-                optimizer.zero_grad()
-                outputs = model(images)
-                loss = loss_fn(input=outputs, target=labels)
-                loss.backward()
-                optimizer.step()
-            else:
-                model.eval()
-                with torch.no_grad():
-                    outputs = model(images_pres_test)
-                    test_loss = loss_fn(input=outputs, target=labes_pres_test)
-
-                    pred = outputs.data.max(1)[1].cpu().numpy()
-                    gt = labes_pres_test.data.cpu().numpy()
-                
-                train_pres_ctr = 0
-
-            time_meter.update(time.time() - start_ts)            # -> time taken per presentation
-
-
-            if (i + 1) % cfg["training"]["print_interval"] == 0:
-                fmt_str = "Pres [{:d}/{:d}]  Loss: {:.4f}  Time/Pres: {:.4f}"
-                print_str = fmt_str.format(
-                    i + 1,
-                    cfg["training"]["num_presentations"],
-                    test_loss.item(),
-                    time_meter.avg / cfg["training"]["batch_size"],
-                )
-                print(print_str)
-                logger.info(print_str)
-                writer.add_scalar("loss/test_loss", test_loss.item(), i + 1)
-                time_meter.reset()
-
-            #            #
-            # TEST PHASE #
-            #            #
-            if ((i + 1) % cfg["training"]["test_interval"] == 0 or \
-                (i + 1) == cfg["training"]["num_presentations"]):          
-                
-                training_state_dict = model.state_dict()                            # saving the training state of the model
-
-                test_pres_ctr = 0
-                for (images_val, labels_val) in enumerate(valloader):  # get a single test presentation 
-                    test_pres_ctr += 1
-
-                    images_val = images_val.to(device)
-                    labels_val = labels_val.to(device)
-
-                    if(train_pres_ctr <= 5):
-                        model.train()
-
-                        optimizer.zero_grad()
-                        outputs = model(images_val)
-                        loss = loss_fn(input=outputs, target=labels_val)
+                if test_pres_ctr <= 5:
+                    model.train()
+                    optimizer.zero_grad()
+                    outputs = model(images_val)
+                    loss = loss_fn(input=outputs, target=labels_val)
                         
-                        loss.backward()
-                        optimizer.step()
+                    loss.backward()
+                    optimizer.step()
+                else:
+                    model.eval()
+                    with torch.no_grad():
+                        outputs = model(images_val)
+                        test_loss = loss_fn(input=outputs, target=labels_val)
+                        pred = outputs.data.max(1)[1].cpu().numpy()
+                        gt = labels_val.data.cpu().numpy()
 
-                    else:
-                        model.eval()
-                        with torch.no_grad():
-
-                            outputs = model(images_val)
-                            test_loss = loss_fn(input=outputs, target=labels_val)
-
-                            pred = outputs.data.max(1)[1].cpu().numpy()
-                            gt = labels_val.data.cpu().numpy()
-
-                            running_metrics_val.update(gt, pred)
-                            val_loss_meter.update(val_loss.item())
+                        running_metrics_val.update(gt, pred)
+                        val_loss_meter.update(test_loss.item())
                             
-                        test_pres_ctr = 0
+                test_pres_ctr = 0
 
-                model.load_state_dict(training_state_dict)                          # revert back to training parameters 
+            model.load_state_dict(training_state_dict)                          # revert back to training parameters
 
+            writer.add_scalar("loss/val_loss", val_loss_meter.avg, i + 1)
+            logger.info("Iter %d Loss: %.4f" % (i + 1, val_loss_meter.avg))
 
-                writer.add_scalar("loss/val_loss", val_loss_meter.avg, i + 1)
-                logger.info("Iter %d Loss: %.4f" % (i + 1, val_loss_meter.avg))
+            score, class_iou = running_metrics_val.get_scores()
+            for k, v in score.items():
+                print(k, v)
+                logger.info("{}: {}".format(k, v))
+                writer.add_scalar("val_metrics/{}".format(k), v, i + 1)
 
-                score, class_iou = running_metrics_val.get_scores()
-                for k, v in score.items():
-                    print(k, v)
-                    logger.info("{}: {}".format(k, v))
-                    writer.add_scalar("val_metrics/{}".format(k), v, i + 1)
+            for k, v in class_iou.items():
+                logger.info("{}: {}".format(k, v))
+                writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
 
-                for k, v in class_iou.items():
-                    logger.info("{}: {}".format(k, v))
-                    writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
+            val_loss_meter.reset()
+            running_metrics_val.reset()
 
-                val_loss_meter.reset()
-                running_metrics_val.reset()
-
-                if score["Mean IoU : \t"] >= best_iou:
-                    best_iou = score["Mean IoU : \t"]
-                    state = {
-                        "epoch": i + 1,
-                        "model_state": model.state_dict(),
-                        "optimizer_state": optimizer.state_dict(),
-                        "scheduler_state": scheduler.state_dict(),
-                        "best_iou": best_iou,
-                    }
-                    save_path = os.path.join(
-                        writer.file_writer.get_logdir(),
-                        "{}_{}_best_model.pkl".format(cfg["model"]["arch"], cfg["data"]["dataset"]),
-                    )
-                    torch.save(state, save_path)
-
-            if (i + 1) == cfg["training"]["num_presentations"]:
-                flag = False
-                break
+            if score["Mean IoU : \t"] >= best_iou:
+                best_iou = score["Mean IoU : \t"]
+                state = {
+                    "epoch": i + 1,
+                    "model_state": model.state_dict(),
+                    "optimizer_state": optimizer.state_dict(),
+                    "scheduler_state": scheduler.state_dict(),
+                    "best_iou": best_iou,
+                }
+                save_path = os.path.join(
+                    writer.file_writer.get_logdir(),
+                    "{}_{}_best_model.pkl".format(cfg["model"]["arch"], cfg["data"]["dataset"]),
+                )
+                torch.save(state, save_path)
+ 
+        if (i + 1) == cfg["training"]["num_presentations"]:
+            break
 
 
 if __name__ == "__main__":

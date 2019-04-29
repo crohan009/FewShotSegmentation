@@ -12,7 +12,7 @@ from ptsemseg.utils import recursive_glob, read_file
 
 
 class ADE20KFewShotLoader(data.Dataset):
-        def __init__(
+    def __init__(
         self,
         data_root="",
         presentation_root="",
@@ -48,19 +48,15 @@ class ADE20KFewShotLoader(data.Dataset):
         self.presentations = presentation_list
         self.pre_classes = classes_list
 
+        self.presentation = []
+        self.classes = []
+
     def __len__(self):
         return len(self.presentations[0])
 
     def __getitem__(self, index):
         index += 1
         index %= self.__len__()
-        if index == 1:
-            # if all images in one presentation has been visited once
-            # randomly select a new presentation from the presentation list
-            idx = random.randint(0, len(self.presentations) - 1)
-            self.presentation = self.presentations[idx]
-            # get the common classes of the selected presentation
-            self.classes = [int(c) for c in self.pre_classes[idx]]
 
         img_path = [image for image in self.images if self.presentation[index] in image]
         ann_path = [ann for ann in self.annotations if self.presentation[index] in ann]
@@ -79,6 +75,11 @@ class ADE20KFewShotLoader(data.Dataset):
             img, ann = self.transform(img, ann)
 
         return img, ann
+    
+    def random_select(self):
+        idx = random.randint(0, len(self.presentations) - 1)
+        self.presentation = self.presentations[idx]
+        self.classes = [int(c) for c in self.pre_classes[idx]]
 
     def zero_annotation(self, annotation):
         annotation[np.isin(annotation, self.classes, invert=True)] = 0
@@ -108,8 +109,9 @@ class ADE20KFewShotLoader(data.Dataset):
 
 
 if __name__ == "__main__":
-    local_path = "./loader_test/"
-    dst = ADE20KFewShotLoader(local_path, is_transform=True)
+    data_path = "./loader_test/"
+    presentation_path = "./loader_test/presentations/training"
+    dst = ADE20KFewShotLoader(data_root=data_path, presentation_root=presentation_path, is_transform=True)
     trainloader = data.DataLoader(dst, batch_size=4)
     for i, data_samples in enumerate(trainloader):
         imgs, labels = data_samples
