@@ -2,6 +2,7 @@ import copy
 import torchvision.models as models
 
 from ptsemseg.models.fcn import fcn8s, fcn16s, fcn32s
+from ptsemseg.models.dp_fcn import dp_fcn8s
 # from ptsemseg.models.fcn_zhou import fcn8s_zhou
 # from ptsemseg.models.segnet import segnet
 # from ptsemseg.models.unet import unet
@@ -21,6 +22,11 @@ def get_model(model_dict, n_classes, version=None):
         model = model(n_classes, **param_dict)
 
     elif name in ["fcn32s", "fcn16s", "fcn8s"]:
+        model = model(n_classes=n_classes, **param_dict)
+        vgg16 = models.vgg16(pretrained=True)
+        model.init_vgg16_params(vgg16)
+
+    elif name in ["dp_fcn8s"]:
         model = model(n_classes=n_classes, **param_dict)
         vgg16 = models.vgg16(pretrained=True)
         model.init_vgg16_params(vgg16)
@@ -58,6 +64,7 @@ def _get_model_instance(name):
             "fcn8s": fcn8s,
             # "fcn8s_zhou": fcn8s_zhou,
             "fcn16s": fcn16s,
+            "dp_fcn8s": dp_fcn8s,
             # "unet": unet,
             # "segnet": segnet,
             # "pspnet": pspnet,
