@@ -18,11 +18,11 @@ def get_loader(name):
     :param name:
     """
     return {
-        "pascal": pascalVOCLoader,
+        # "pascal": pascalVOCLoader,
         # "camvid": camvidLoader,
         "ade20k": ADE20KLoader,
         "ade20k_zhou": ADE20KLoader_Zhou,
-        "mit_sceneparsing_benchmark": MITSceneParsingBenchmarkLoader,
+        # "mit_sceneparsing_benchmark": MITSceneParsingBenchmarkLoader,
         "ade20k_few_shot": ADE20KFewShotLoader
         # "cityscapes": cityscapesLoader,
         # "nyuv2": NYUv2Loader,

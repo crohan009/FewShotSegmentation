@@ -1,8 +1,8 @@
 import copy
 import torchvision.models as models
 
-from ptsemseg.models.fcn import fcn8s, fcn8s_zhou, fcn16s, fcn32s
-from ptsemseg.models.fcn_zhou import fcn8s_zhou
+from ptsemseg.models.fcn import fcn8s, fcn16s, fcn32s
+# from ptsemseg.models.fcn_zhou import fcn8s_zhou
 # from ptsemseg.models.segnet import segnet
 # from ptsemseg.models.unet import unet
 # from ptsemseg.models.pspnet import pspnet
@@ -25,8 +25,8 @@ def get_model(model_dict, n_classes, version=None):
         vgg16 = models.vgg16(pretrained=True)
         model.init_vgg16_params(vgg16)
     
-    elif name == "fcn8s_zhou":
-        model = model(n_classes=n_classes, **param_dict)
+    # elif name == "fcn8s_zhou":
+    #     model = model(n_classes=n_classes, **param_dict)
 
     elif name == "segnet":
         model = model(n_classes=n_classes, **param_dict)
@@ -56,16 +56,16 @@ def _get_model_instance(name):
         return {
             "fcn32s": fcn32s,
             "fcn8s": fcn8s,
-            "fcn8s_zhou": fcn8s_zhou,
+            # "fcn8s_zhou": fcn8s_zhou,
             "fcn16s": fcn16s,
-            "unet": unet,
-            "segnet": segnet,
-            "pspnet": pspnet,
-            "icnet": icnet,
-            "icnetBN": icnet,
-            "linknet": linknet,
-            "frrnA": frrn,
-            "frrnB": frrn,
+            # "unet": unet,
+            # "segnet": segnet,
+            # "pspnet": pspnet,
+            # "icnet": icnet,
+            # "icnetBN": icnet,
+            # "linknet": linknet,
+            # "frrnA": frrn,
+            # "frrnB": frrn,
         }[name]
     except:
         raise ("Model {} not available".format(name))
