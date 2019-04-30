@@ -14,7 +14,7 @@ ttype = torch.cuda.FloatTensor;
 # FCN8s
 class dp_fcn8s(nn.Module):
     def __init__(self, params, n_classes=151, learned_billinear=True):
-        super(fcn8s, self).__init__()
+        super(dp_fcn8s, self).__init__()
         self.learned_billinear = learned_billinear
         self.rule = params['rule']       # --rule hebb
         self.n_classes = n_classes       # n_classes == 151
@@ -263,13 +263,13 @@ class dp_fcn8s(nn.Module):
                     l2.bias.data = l1.bias.data
         for i1, i2 in zip([0, 3], [0, 3]):
             l1 = vgg16.classifier[i1]
-            l2 = self.classifier[i2]
+            l2 = self.conv_block6[i2]
             l2.weight.data = l1.weight.data.view(l2.weight.size())
             l2.bias.data = l1.bias.data.view(l2.bias.size())
-        n_class = self.classifier[6].weight.size()[0]
+        n_class = self.conv_block6[6].weight.size()[0]
         if copy_fc8:
             l1 = vgg16.classifier[6]
-            l2 = self.classifier[6]
+            l2 = self.conv_block6[6]
             l2.weight.data = l1.weight.data[:n_class, :].view(l2.weight.size())
             l2.bias.data = l1.bias.data[:n_class]
 

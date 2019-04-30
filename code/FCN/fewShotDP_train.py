@@ -102,9 +102,9 @@ def train(cfg, writer, logger):
     running_metrics_val = runningScore(n_classes)
 
     # Setup Model
-    model = get_model(cfg["model"], n_classes).to(device)
+    model = get_model(cfg["model"], n_classes, defaultParams).to(device)
 
-    model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+    #model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
 
     # Setup optimizer, lr_scheduler and loss function
     optimizer_cls = get_optimizer(cfg)
@@ -149,25 +149,28 @@ def train(cfg, writer, logger):
         #                #
         # TRAINING PHASE #
         #                #
-        
-
         i += 1
         start_ts = time.time()
         trainloader.dataset.random_select()
 
-        hebb = model.initialZeroHebb().to(device)
+        hebb = model.initialZeroHebb().to(device) 
         for idx, (images, labels) in enumerate(trainloader, 1):                    # get a single training presentation
-            scheduler.step()
-            model.train()
 
             images = images.to(device)
             labels = labels.to(device)
 
-            optimizer.zero_grad()
-            outputs, hebb = model(images, labels, hebb, device, test_mode=(idx==6))
-            loss = loss_fn(input=outputs, target=labels)
-            loss.backward()
-            optimizer.step()
+            if idx <= 5:
+                model.eval()
+                with torch.no_grad():
+                	outputs, hebb = model(images, labels, hebb, device, test_mode=False)
+            else:
+                scheduler.step()
+                model.train()
+                optimizer.zero_grad()
+                outputs, hebb = model(images, labels, hebb, device, test_mode=(idx==6))
+                loss = loss_fn(input=outputs, target=labels)
+                loss.backward()
+                optimizer.step()
 
         time_meter.update(time.time() - start_ts)  # -> time taken per presentation
 
@@ -200,23 +203,22 @@ def train(cfg, writer, logger):
                 labels_val = labels_val.to(device)
 
                 if idx <= 5:
+                    model.eval()
+                    with torch.no_grad():
+                        outputs, hebb = model(images, labels, hebb, device, test_mode=False)
+                else:
                     model.train()
                     optimizer.zero_grad()
                     outputs, hebb = model(images, labels, hebb, device, test_mode=False)
                     loss = loss_fn(input=outputs, target=labels_val)
-                        
                     loss.backward()
                     optimizer.step()
-                else:
-                    model.eval()
-                    with torch.no_grad():
-                        outputs, hebb = model(images, labels, hebb, device, test_mode=True)
-                        test_loss = loss_fn(input=outputs, target=labels_val)
-                        pred = outputs.data.max(1)[1].cpu().numpy()
-                        gt = labels_val.data.cpu().numpy()
 
-                        running_metrics_val.update(gt, pred)
-                        val_loss_meter.update(test_loss.item())
+                    pred = outputs.data.max(1)[1].cpu().numpy()
+                    gt = labels_val.data.cpu().numpy()
+
+                    running_metrics_val.update(gt, pred)
+                    val_loss_meter.update(loss.item())
 
             model.load_state_dict(training_state_dict)                          # revert back to training parameters
 
@@ -247,7 +249,7 @@ def train(cfg, writer, logger):
                 }
                 save_path = os.path.join(
                     writer.file_writer.get_logdir(),
-                    "{}_{}_best_model.pkl".format(cfg["model"]["arch"], cfg["data"]["dataset"]),
+                    "{}_{}_best_model.pkl".format(cfg["model"]["arch"], cfg["data"]["dataloader_type"]),
                 )
                 torch.save(state, save_path)
  
