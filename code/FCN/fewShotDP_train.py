@@ -167,7 +167,7 @@ def train(cfg, writer, logger):
                 scheduler.step()
                 model.train()
                 optimizer.zero_grad()
-                outputs, hebb = model(images, labels, hebb, device, test_mode=(idx==6))
+                outputs, hebb = model(images, labels, hebb, device, test_mode=True)
                 loss = loss_fn(input=outputs, target=labels)
                 loss.backward()
                 optimizer.step()
@@ -209,7 +209,7 @@ def train(cfg, writer, logger):
                 else:
                     model.train()
                     optimizer.zero_grad()
-                    outputs, hebb = model(images, labels, hebb, device, test_mode=False)
+                    outputs, hebb = model(images, labels, hebb, device, test_mode=True)
                     loss = loss_fn(input=outputs, target=labels_val)
                     loss.backward()
                     optimizer.step()
