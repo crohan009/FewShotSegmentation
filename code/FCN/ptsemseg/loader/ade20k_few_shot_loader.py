@@ -28,7 +28,7 @@ class ADE20KFewShotLoader(data.Dataset):
         self.augmentations = augmentations
         self.img_norm = img_norm
         self.test_mode = test_mode
-        self.n_classes = 151
+        self.n_classes = 6
         self.img_size = img_size if isinstance(img_size, tuple) else (img_size, img_size)
         self.mean = np.array([104.00699, 116.66877, 122.67892])
 
@@ -66,7 +66,7 @@ class ADE20KFewShotLoader(data.Dataset):
 
         ann = m.imread(ann_path[0])
         ann = np.array(ann, dtype=np.int32)
-        ann = self.zero_annotation(ann)
+        ann = self.modify_annotation(ann)
 
         if self.augmentations is not None:
            img, ann = self.augmentations(img, ann)
@@ -81,8 +81,10 @@ class ADE20KFewShotLoader(data.Dataset):
         self.presentation = self.presentations[idx]
         self.classes = [int(c) for c in self.pre_classes[idx]]
 
-    def zero_annotation(self, annotation):
+    def modify_annotation(self, annotation):
         annotation[np.isin(annotation, self.classes, invert=True)] = 0
+        for c in self.classes:
+            annotation[annotation==c] = self.classes.index(c)
         return annotation
 
     def transform(self, img, lbl):

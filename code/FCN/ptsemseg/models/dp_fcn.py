@@ -159,7 +159,7 @@ class dp_fcn8s(nn.Module):
         #----------- PLASTIC LAYER --------
         
         if not test_mode:
-          lbl = self.scale_and_make_one_hot(device, y, dim=(conv6_shape[2], conv6_shape[3]), C=151)
+          lbl = self.scale_and_make_one_hot(device, y, dim=(conv6_shape[2], conv6_shape[3]), C=self.n_classes)
           #print("lbl.shape = ", lbl.shape)
           
         
