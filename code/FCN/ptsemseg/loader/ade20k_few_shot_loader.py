@@ -62,6 +62,11 @@ class ADE20KFewShotLoader(data.Dataset):
         ann_path = [ann for ann in self.annotations if self.presentation[index] in ann]
 
         img = m.imread(img_path[0])
+        if img.ndim == 2:
+            list = []
+            for i in range(3):
+               list.append(img)
+            img = list
         img = np.array(img, dtype=np.uint8)
 
         ann = m.imread(ann_path[0])
@@ -84,7 +89,7 @@ class ADE20KFewShotLoader(data.Dataset):
     def modify_annotation(self, annotation):
         annotation[np.isin(annotation, self.classes, invert=True)] = 0
         for c in self.classes:
-            annotation[annotation==c] = self.classes.index(c)
+            annotation[annotation==c] = self.classes.index(c) + 1
         return annotation
 
     def transform(self, img, lbl):
