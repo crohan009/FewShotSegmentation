@@ -1,0 +1,28 @@
+model:
+    arch: dp_fcn8s
+data:
+    dataloader_type: ade20k_few_shot
+    data_root: /scratch/rc3232/advml/project/pytorch-semseg/ptsemseg/datasets/ADEChallengeData2016/
+    presentation_root: /scratch/rc3232/DL/project/FewShotSegmentation/mini-datasets/
+    img_rows: 512
+    img_cols: 512
+    num_train_img: 5
+    num_val_img: 1
+
+training:
+    num_presentations: 10
+    batch_size: 1
+    test_interval: 50
+    n_workers: 2
+    print_interval: 10
+    optimizer:
+        name: 'sgd'
+        lr: 1.0e-10
+        weight_decay: 0.0005
+        momentum: 0.99
+    loss:
+        name: 'cross_entropy'
+        size_average: False
+    lr_schedule:
+        name: 'exp_lr'
+    resume: /scratch/rc3232/DL/project/FewShotSegmentation/runs/oneShot_dp_fcn8s/83306/dp_fcn8s_ade20k_few_shot_best_model.pkl
