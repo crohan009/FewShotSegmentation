@@ -13,7 +13,7 @@ ttype = torch.cuda.FloatTensor;
 
 # FCN8s
 class dp_fcn8s(nn.Module):
-    def __init__(self, params, n_classes=151, learned_billinear=True):
+    def __init__(self, params, n_classes=6, learned_billinear=True):
         super(dp_fcn8s, self).__init__()
         self.learned_billinear = learned_billinear
         self.rule = params['rule']       # --rule hebb
@@ -159,7 +159,7 @@ class dp_fcn8s(nn.Module):
         #----------- PLASTIC LAYER --------
         
         if not test_mode:
-          lbl = self.scale_and_make_one_hot(device, y, dim=(conv6_shape[2], conv6_shape[3]), C=151)
+          lbl = self.scale_and_make_one_hot(device, y, dim=(conv6_shape[2], conv6_shape[3]), C=self.n_classes)
           #print("lbl.shape = ", lbl.shape)
           
         
@@ -241,6 +241,36 @@ class dp_fcn8s(nn.Module):
             out = F.upsample(score, x.size()[2:])
             
         return out, hebb
+
+    def load_pretrained_weights(self, weight_path):
+        print("Loading weights at {}".format(weight_path))
+
+        weights = torch.load(weight_path)
+        net_params = self.state_dict()
+
+        mismatch_lst = ["conv_block6.6.weight", "conv_block6.6.bias", "score_pool4.weight", "score_pool4.bias",
+                        "score_pool3.weight", "score_pool3.bias", "upscore2.weight", "upscore4.weight", "upscore8.weight", 
+                        "classifier.6.weight", "classifier.6.bias"]
+      
+        for param in weights['model_state'].keys():
+
+            if (param[7:] in mismatch_lst):
+                print("--Skipped param: '{}'--".format(param))
+                continue
+
+            elif (param[7:] in net_params.keys()):
+                net_params[param[7:]] = weights['model_state'][param]
+                print("net_params[{}] <--- weights['model_state'][{}]".format(param[7:], param))
+
+            elif param[7:].split('.')[0] == "classifier":
+                s = param[7:].split('.')
+                s[0] = "conv_block6"
+                s = ".".join(s)
+                net_params[s] = weights['model_state'][param]
+                print("net_params[{}] <--- weights['model_state'][{}]".format(s, param))
+
+        self.load_state_dict(net_params) 
+        print("Done")
 
     def init_vgg16_params(self, vgg16, copy_fc8=True):
         blocks = [
