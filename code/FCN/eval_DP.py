@@ -45,14 +45,14 @@ defaultParams = {
     'rngseed':0
 }
 
-def decode_segmap(temp, n_classes=151):
+def decode_segmap(temp, n_classes=21):
     r = temp.copy()
     g = temp.copy()
     b = temp.copy()
     for l in range(0, n_classes):
-        r[temp == l] = 10 * (l % 10)
-        g[temp == l] = l
-        b[temp == l] = 0
+        r[temp == l] = l * (255.0/n_classes) - l * np.random.randint(10)
+        g[temp == l] = l * (255.0/n_classes) - l * np.random.randint(10)
+        b[temp == l] = l * (255.0/n_classes) - l * np.random.randint(10)
 
     rgb = np.zeros((temp.shape[1], temp.shape[2], 3))
     rgb[:, :, 0] = r / 255.0
@@ -61,15 +61,15 @@ def decode_segmap(temp, n_classes=151):
 
     return rgb
 
-def save_presentations(pres_results, num_pres, logdir):
-    fig, axs = plt.subplots(nrows=num_pres, ncols=3, figsize=(16,16*num_pres//3))
+def save_presentations(pres_results, num_pres, num_col, logdir, name):
+    fig, axs = plt.subplots(nrows=num_pres, ncols=num_col, figsize=(16,16*num_pres//3))
     plt.subplots_adjust(top=0.93)
     print(len(pres_results))
 
     for idx, ax in enumerate(axs.flatten()):
        ax.imshow(pres_results[idx])
 
-    plt.savefig(logdir + "/pres_results.png")
+    plt.savefig(logdir + "/" + name)
 
 def eval(cfg, writer, logger, logdir):
 
@@ -159,6 +159,7 @@ def eval(cfg, writer, logger, logdir):
     best_iou = -100.0
     i = 0
     pres_results = []               # a final list of all <image, label, output> of all presentations
+    img_list = []
 
     while i < cfg["training"]["num_presentations"]:
 
@@ -173,7 +174,12 @@ def eval(cfg, writer, logger, logdir):
         start_ts = time.time()
 
         for idx, (images_val, labels_val) in enumerate(valloader, 1):  # get a single test presentation
-
+ 
+            img = torchvision.utils.make_grid(images_val).numpy()
+            img = np.transpose(img, (1, 2, 0))
+            img = img[:, :, ::-1]
+            img_list.append(img)
+            pres_results.append(decode_segmap(labels_val.numpy()))
             images_val = images_val.to(device)
             labels_val = labels_val.to(device)
 
@@ -196,18 +202,18 @@ def eval(cfg, writer, logger, logdir):
                 val_loss_meter.update(loss.item())
 
                 # Turning the image, label, and output into plottable formats
-                img = torchvision.utils.make_grid(images_val.cpu()).numpy()
+                '''img = torchvision.utils.make_grid(images_val.cpu()).numpy()
                 img = np.transpose(img, (1, 2, 0))
                 img = img[:, :, ::-1]
                 print("img.shape",img.shape)
                 print("gt.shape and type",gt.shape, gt.dtype)
-                print("pred.shape and type",pred.shape, pred.dtype)
+                print("pred.shape and type",pred.shape, pred.dtype)'''
 
                 cla, cnt = np.unique(pred, return_counts=True)
                 print("Unique classes predicted = {}, counts = {}".format(cla, cnt))
-                pres_results.append(img)
-                pres_results.append(decode_segmap(gt))
-                pres_results.append(decode_segmap(pred.astype('int64')))
+                #pres_results.append(img)
+                #pres_results.append(decode_segmap(gt))
+                pres_results.append(decode_segmap(pred))
 
 
 
@@ -245,9 +251,9 @@ def eval(cfg, writer, logger, logdir):
         running_metrics_val.reset()
 
     # save presentations to a png image file
-    save_presentations(pres_results=pres_results, num_pres=cfg["training"]["num_presentations"], logdir=logdir)
-
-
+    save_presentations(pres_results=pres_results, num_pres=cfg["training"]["num_presentations"], num_col=7, logdir=logdir, name="pre_results.png")
+    save_presentations(pres_results=img_list, num_pres=cfg["training"]["num_presentations"], num_col=6, logdir=logdir, name="img_list.png")
+   
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="config")
     parser.add_argument(
