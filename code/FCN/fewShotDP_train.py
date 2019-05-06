@@ -20,6 +20,7 @@ from ptsemseg.schedulers import get_scheduler
 from ptsemseg.optimizers import get_optimizer
 
 from tensorboardX import SummaryWriter
+
 defaultParams = {
     'activ': 'tanh',    # 'tanh' or 'selu'
     #'plastsize': 200,
@@ -135,6 +136,8 @@ def train(cfg, writer, logger):
             )
         else:
             logger.info("No checkpoint found at '{}'".format(cfg["training"]["resume"]))
+
+    model.load_pretrained_weights(cfg["training"]["saved_model_path"])
 
     # train_loss_meter = averageMeter()
     val_loss_meter = averageMeter()

@@ -29,7 +29,7 @@ defaultParams = {
     'rule': 'clip',     # 'hebb' or 'oja' or 'clip'
     'alpha': 'free',    # 'free' of 'yoked' (if the latter, alpha is a single scalar learned parameter, shared across all connection)
     'steplr': 1e6,      # How often should we change the learning rate?
-    'nbclasses': 151,
+    'nbclasses': 6,
     'gamma': .666,      # The annealing factor of learning rate decay for Adam
     'flare': 0,         # Whether or not the ConvNet has more features in higher channels
     'nbshots': 1,       # Number of 'shots' in the few-shots learning

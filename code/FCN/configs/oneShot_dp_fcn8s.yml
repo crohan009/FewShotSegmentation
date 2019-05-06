@@ -24,5 +24,6 @@ training:
         name: 'cross_entropy'
         size_average: False
     lr_schedule:
+    saved_model_path: /scratch/rc3232/DL/project/FewShotSegmentation/runs/weights/fcn8s_ade20k_best_model.pkl
     resume: fcn8s_ade20k_best_model.pkl
 
