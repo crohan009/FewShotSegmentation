@@ -72,6 +72,8 @@ class ADE20KFewShotLoader(data.Dataset):
         idx = random.randint(0, len(self.presentations) - 1)
         self.presentation = self.presentations[idx]
         self.classes = [int(c) for c in self.pre_classes[idx]]
+        self.image_data = []
+        self.label_data = []
 
         for index in range(len(self.presentation)):
             img_path = [image for image in self.images if self.presentation[index] in image]
