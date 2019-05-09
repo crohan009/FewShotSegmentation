@@ -219,7 +219,7 @@ class RandomRotate(object):
                 scale=1.0,
                 angle=rotate_degree,
                 resample=Image.NEAREST,
-                fillcolor=250,
+                fillcolor=0,
                 shear=0.0,
             ),
         )
