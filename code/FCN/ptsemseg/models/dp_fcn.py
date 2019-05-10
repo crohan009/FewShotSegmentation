@@ -120,11 +120,12 @@ class dp_fcn8s(nn.Module):
            N x C x H x W, where C is class number. One-hot encoded. 
         ''' 
 
-        lbl = labels.cpu().numpy().squeeze().astype(float)
-        lbl = m.imresize(lbl, dim, "nearest", mode="F")
-        lbl = lbl.astype(int)
-        labels = torch.from_numpy(lbl).long()
-        labels = labels.view(1,1, dim[0], dim[1]).to(device)
+        # lbl = labels.cpu().numpy().squeeze().astype(float)
+        # lbl = m.imresize(lbl, dim, "nearest", mode="F")
+        # lbl = lbl.astype(int)
+        # labels = torch.from_numpy(lbl).long()
+        # labels = labels.view(1,1, dim[0], dim[1]).to(device)
+        labels = F.interpolate(labels.float(), size=dim, mode="nearest")
 
         one_hot = torch.cuda.FloatTensor(labels.size(0), C, labels.size(2), labels.size(3)).zero_() 
         target = one_hot.scatter_(1, labels.data, 1) 

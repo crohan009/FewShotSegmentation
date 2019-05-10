@@ -66,7 +66,7 @@ class ADE20KFewShotLoader(data.Dataset):
         index += 1
         index %= self.__len__()
 
-        return torch.from_numpy(self.image_data[index]).float(), torch.from_numpy(self.label_data[index]).long()
+        return torch.from_numpy(self.image_data[index]).float(), torch.from_numpy(np.expand_dims(self.label_data[index], axis=1)).long()
     
     def random_select(self):
         idx = random.randint(0, len(self.presentations) - 1)
